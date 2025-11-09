@@ -27,8 +27,26 @@ spring:
     caffeine:
       spec: maximumSize=10000,expireAfterWrite=60s
 
+  # Redis Configuration
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 100
+          max-idle: 50
+          min-idle: 10
+          max-wait: 2000ms
+
 server:
   port: 8080
+
+# Redis enabled flag (can be disabled for local development without Redis)
+redis:
+  enabled: ${REDIS_ENABLED:true}
 
 leaderboard:
   cache:

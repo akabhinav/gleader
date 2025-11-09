@@ -20,16 +20,27 @@ import java.util.stream.Collectors;
  * Service for managing scores
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
 public class ScoreService {
 
     private final ScoreRepository scoreRepository;
     private final PlayerRepository playerRepository;
+    private RedisLeaderboardService redisService;
+
+    public ScoreService(ScoreRepository scoreRepository, PlayerRepository playerRepository) {
+        this.scoreRepository = scoreRepository;
+        this.playerRepository = playerRepository;
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setRedisService(RedisLeaderboardService redisService) {
+        this.redisService = redisService;
+        log.info("Redis service injected into ScoreService");
+    }
 
     @Transactional
-    @CacheEvict(value = {"leaderboard", "playerRank"}, allEntries = true)
+    @CacheEvict(value = "playerRank", key = "#request.playerId() + '_' + #request.gameType()")
     public ScoreResponse submitScore(SubmitScoreRequest request) {
         log.info("Submitting score for player {}: {} points in {}",
             request.playerId(), request.scoreValue(), request.gameType());
@@ -52,6 +63,21 @@ public class ScoreService {
 
         Score savedScore = scoreRepository.save(score);
         log.info("Score submitted successfully with ID: {}", savedScore.getId());
+
+        // Sync to Redis if available (async pattern would be better in production)
+        if (redisService != null) {
+            try {
+                redisService.submitScore(
+                    request.playerId(),
+                    request.scoreValue(),
+                    request.gameType()
+                );
+                log.debug("Score synced to Redis for player {}", request.playerId());
+            } catch (Exception e) {
+                log.warn("Failed to sync score to Redis (non-critical): {}", e.getMessage());
+                // Don't fail the request if Redis is down
+            }
+        }
 
         return ScoreResponse.from(savedScore);
     }
@@ -76,7 +102,6 @@ public class ScoreService {
     }
 
     @Transactional
-    @CacheEvict(value = {"leaderboard", "playerRank"}, allEntries = true)
     public void deleteScore(Long id) {
         log.info("Deleting score with ID: {}", id);
         if (!scoreRepository.existsById(id)) {

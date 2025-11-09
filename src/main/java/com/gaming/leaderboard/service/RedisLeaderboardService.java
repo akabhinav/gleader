@@ -6,6 +6,7 @@ import com.gaming.leaderboard.model.Score.GameType;
 import com.gaming.leaderboard.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@ConditionalOnProperty(name = "redis.enabled", havingValue = "true")
 public class RedisLeaderboardService {
 
     private final StringRedisTemplate redisTemplate;

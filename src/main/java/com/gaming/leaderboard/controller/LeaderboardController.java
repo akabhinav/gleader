@@ -2,16 +2,19 @@ package com.gaming.leaderboard.controller;
 
 import com.gaming.leaderboard.dto.LeaderboardDTO.*;
 import com.gaming.leaderboard.model.Score.GameType;
-import com.gaming.leaderboard.service.LeaderboardService;
+import com.gaming.leaderboard.service.HybridLeaderboardService;
 import com.gaming.leaderboard.service.LeaderboardService.TimePeriod;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 /**
  * REST Controller for Leaderboard operations
  * Provides various leaderboard views and rankings
+ * Uses hybrid service that intelligently switches between Redis and Database
  */
 @RestController
 @RequestMapping("/api/v1/leaderboard")
@@ -19,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class LeaderboardController {
 
-    private final LeaderboardService leaderboardService;
+    private final HybridLeaderboardService leaderboardService;
 
     @GetMapping("/{gameType}")
     public ResponseEntity<LeaderboardResponse> getLeaderboard(
@@ -86,5 +89,15 @@ public class LeaderboardController {
             contextSize
         );
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/status")
+    public ResponseEntity<Map<String, Object>> getStatus() {
+        log.info("GET /api/v1/leaderboard/status - Checking leaderboard service status");
+        return ResponseEntity.ok(Map.of(
+            "service", "Leaderboard",
+            "mode", leaderboardService.getStatus(),
+            "redisAvailable", leaderboardService.isRedisAvailable()
+        ));
     }
 }
