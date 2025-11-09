@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  To enable Redis support, add this dependency to pom.xml:
+-->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-redis</artifactId>
+</dependency>
+
+<!-- Optional: For Redis connection pooling -->
+<dependency>
+    <groupId>org.apache.commons</groupId>
+    <artifactId>commons-pool2</artifactId>
+</dependency>
+
+<!-- Configuration in application.yml -->
+<!--
+spring:
+  redis:
+    host: localhost
+    port: 6379
+    password:
+    lettuce:
+      pool:
+        max-active: 100
+        max-idle: 50
+        min-idle: 10
+        max-wait: 2000ms
+    timeout: 5000ms
+-->
